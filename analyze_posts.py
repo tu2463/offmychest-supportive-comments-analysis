@@ -4,17 +4,20 @@ import scipy.stats as stats
 from sklearn.feature_extraction.text import CountVectorizer
 import string
 import nltk
-from nltk.corpus import stopwords
+from nltk import pos_tag, word_tokenize
+from nltk.corpus import stopwords, wordnet
 from nltk.stem import WordNetLemmatizer
 
 # Download NLTK resources (only the first time)
 nltk.download('punkt_tab')
 nltk.download('stopwords')
 nltk.download('wordnet')
+nltk.download('averaged_perceptron_tagger_eng')
 
-# 1. Load & clean data
+
+# 1. Load & cleandata
 posts_df = pd.read_csv('csv/offmychest_posts_comments_combined.csv')
-
+    
 def clean_and_tokenize(text):
     # Lowercase
     text = text.lower()
@@ -80,6 +83,30 @@ results_df.to_csv('csv/word_supportive_analysis.csv', index=False)
 # 7. Visualization
 # Top 10 positive and top 10 negative words
 word_count = 50;
+
+# Step A: POS tag all words
+tagged = pos_tag(results_df['word'])
+pos_tags = {word: tag for word, tag in tagged}
+results_df['pos'] = results_df['word'].map(pos_tags)
+
+# POS tag mapping for lemmatizer
+def get_wordnet_pos(tag):
+    if tag.startswith('J'):
+        return wordnet.ADJ
+    elif tag.startswith('V'):
+        return wordnet.VERB
+    elif tag.startswith('N'):
+        return wordnet.NOUN
+    elif tag.startswith('R'):
+        return wordnet.ADV
+    else:
+        return wordnet.NOUN  # default to noun
+    
+# Step B: Filter for adjectives and nouns
+results_df['wn_pos'] = results_df['pos'].map(get_wordnet_pos)
+adjective_df = results_df[results_df['wn_pos'] == wordnet.ADJ].head(word_count)
+noun_df = results_df[results_df['wn_pos'] == wordnet.NOUN].head(word_count)
+
 top_positive = results_df.head(word_count)
 # top_negative = results_df.tail(10)
 
@@ -92,6 +119,28 @@ plt.xlabel('Word')
 plt.ylabel('Difference in Supportive %')
 plt.tight_layout()
 plt.savefig('csv/top_positive_words.png')
+plt.show()
+
+# Barplot - Top Positive Adjective Words
+plt.figure(figsize=(18, 8))
+plt.bar(adjective_df['word'], adjective_df['difference'])
+plt.xticks(rotation=90)
+plt.title(f"Top {word_count} Adjective Words Correlated with Higher Supportive Comments")
+plt.xlabel('Adjective')
+plt.ylabel('Difference in Supportive %')
+plt.tight_layout()
+plt.savefig('csv/top_positive_adjective_words.png')
+plt.show()
+
+# Barplot - Top Positive Noun Words
+plt.figure(figsize=(18, 8))
+plt.bar(noun_df['word'], noun_df['difference'])
+plt.xticks(rotation=90)
+plt.title(f"Top {word_count} Noun Words Correlated with Higher Supportive Comments")
+plt.xlabel('Noun')
+plt.ylabel('Difference in Supportive %')
+plt.tight_layout()
+plt.savefig('csv/top_positive_noun_words.png')
 plt.show()
 
 # # Barplot - Top Negative Words
