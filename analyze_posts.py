@@ -4,9 +4,10 @@ import scipy.stats as stats
 from sklearn.feature_extraction.text import CountVectorizer
 import string
 import nltk
-from nltk import pos_tag, word_tokenize
+from nltk import pos_tag
 from nltk.corpus import stopwords, wordnet
 from nltk.stem import WordNetLemmatizer
+import numpy as np
 
 # Download NLTK resources (only the first time)
 nltk.download('punkt_tab')
@@ -106,41 +107,57 @@ def get_wordnet_pos(tag):
 results_df['wn_pos'] = results_df['pos'].map(get_wordnet_pos)
 adjective_df = results_df[results_df['wn_pos'] == wordnet.ADJ].head(word_count)
 noun_df = results_df[results_df['wn_pos'] == wordnet.NOUN].head(word_count)
+verb_df = results_df[results_df['wn_pos'] == wordnet.VERB].head(word_count)
 
 top_positive = results_df.head(word_count)
 # top_negative = results_df.tail(10)
 
 # Barplot - Top Positive Words
 plt.figure(figsize=(18, 8))
-plt.bar(top_positive['word'], top_positive['difference'])
+colors = np.where(top_positive['p_value'] < 0.05, 'tab:blue', 'lightgray')
+plt.bar(top_positive['word'], top_positive['difference'], color=colors)
 plt.xticks(rotation=90)
-plt.title(f"Top {word_count} Words Correlated with Higher Supportive Comments")
+plt.title(f"Top {word_count} Words Correlated with Higher Supportive Comments\n(Grey = Not Statistically Significant)")
 plt.xlabel('Word')
 plt.ylabel('Difference in Supportive %')
 plt.tight_layout()
 plt.savefig('csv/top_positive_words.png')
 plt.show()
 
-# Barplot - Top Positive Adjective Words
+# Barplot - Top Positive Adjective Words (colored)
 plt.figure(figsize=(18, 8))
-plt.bar(adjective_df['word'], adjective_df['difference'])
+colors = np.where(adjective_df['p_value'] < 0.05, 'tab:blue', 'lightgray')
+plt.bar(adjective_df['word'], adjective_df['difference'], color=colors)
 plt.xticks(rotation=90)
-plt.title(f"Top {word_count} Adjective Words Correlated with Higher Supportive Comments")
+plt.title(f"Top {word_count} Adjective Words Correlated with Higher Supportive Comments\n(Grey = Not Statistically Significant)")
 plt.xlabel('Adjective')
 plt.ylabel('Difference in Supportive %')
 plt.tight_layout()
 plt.savefig('csv/top_positive_adjective_words.png')
 plt.show()
 
-# Barplot - Top Positive Noun Words
+# Barplot - Top Positive Noun Words (colored)
 plt.figure(figsize=(18, 8))
-plt.bar(noun_df['word'], noun_df['difference'])
+colors = np.where(noun_df['p_value'] < 0.05, 'tab:blue', 'lightgray')
+plt.bar(noun_df['word'], noun_df['difference'], color=colors)
 plt.xticks(rotation=90)
-plt.title(f"Top {word_count} Noun Words Correlated with Higher Supportive Comments")
+plt.title(f"Top {word_count} Noun Words Correlated with Higher Supportive Comments\n(Grey = Not Statistically Significant)")
 plt.xlabel('Noun')
 plt.ylabel('Difference in Supportive %')
 plt.tight_layout()
 plt.savefig('csv/top_positive_noun_words.png')
+plt.show()
+
+# Barplot - Top Positive Verb Words (colored)
+plt.figure(figsize=(18, 8))
+colors = np.where(verb_df['p_value'] < 0.05, 'tab:blue', 'lightgray')
+plt.bar(verb_df['word'], verb_df['difference'], color=colors)
+plt.xticks(rotation=90)
+plt.title(f"Top 10 Verb Words Correlated with Higher Supportive Comments\n(Grey = Not Statistically Significant)")
+plt.xlabel('Verb')
+plt.ylabel('Difference in Supportive %')
+plt.tight_layout()
+plt.savefig('csv/top_positive_verb_words.png')
 plt.show()
 
 # # Barplot - Top Negative Words
