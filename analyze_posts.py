@@ -12,8 +12,8 @@ nltk.download('punkt_tab')
 nltk.download('stopwords')
 nltk.download('wordnet')
 
-# 1. Load & cleandata
-posts_df = pd.read_csv('offmychest/offmychest_posts_comments_combined.csv')
+# 1. Load & clean data
+posts_df = pd.read_csv('csv/offmychest_posts_comments_combined.csv')
 
 def clean_and_tokenize(text):
     # Lowercase
@@ -25,6 +25,8 @@ def clean_and_tokenize(text):
     # Remove stopwords
     stop_words = set(stopwords.words('english'))
     tokens = [w for w in tokens if w not in stop_words]
+    # Remove tokens that are purely numbers
+    tokens = [w for w in tokens if not any(c.isdigit() for c in w)]
     # Lemmatize
     lemmatizer = WordNetLemmatizer()
     tokens = [lemmatizer.lemmatize(w) for w in tokens]
@@ -73,7 +75,7 @@ print('Statistical analysis complete... ' + str(len(results)) + ' words analyzed
 # 6. Output results
 results_df = pd.DataFrame(results)
 results_df = results_df.sort_values(by='difference', ascending=False)
-results_df.to_csv('word_supportive_analysis.csv', index=False)
+results_df.to_csv('csv/word_supportive_analysis.csv', index=False)
 
 # 7. Visualization
 # Top 10 positive and top 10 negative words
@@ -84,12 +86,12 @@ top_positive = results_df.head(word_count)
 # Barplot - Top Positive Words
 plt.figure(figsize=(18, 8))
 plt.bar(top_positive['word'], top_positive['difference'])
-plt.xticks(rotation=60)
+plt.xticks(rotation=90)
 plt.title(f"Top {word_count} Words Correlated with Higher Supportive Comments")
 plt.xlabel('Word')
 plt.ylabel('Difference in Supportive %')
 plt.tight_layout()
-plt.savefig('top_positive_words.png')
+plt.savefig('csv/top_positive_words.png')
 plt.show()
 
 # # Barplot - Top Negative Words
